@@ -1,98 +1,123 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Link } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function HomeScreen() {
+import { BRAND, PALETTE } from '@/constants/brand';
+import { SAMPLE_PUZZLES } from '@/lib/puzzles';
+import { useWallet } from '@/lib/wallet';
+
+type GameEntry = {
+  id: string;
+  title: string;
+  subtitle: string;
+  route: string;
+  enabled: boolean;
+};
+
+const GAMES: GameEntry[] = [
+  {
+    id: 'photo-hunt',
+    title: 'Photo Hunt',
+    subtitle: 'Spot the differences before time runs out.',
+    route: `/games/photo-hunt/${SAMPLE_PUZZLES[0].id}`,
+    enabled: true,
+  },
+  {
+    id: 'coming-soon-1',
+    title: 'Trivia Last Call',
+    subtitle: 'Coming soon.',
+    route: '',
+    enabled: false,
+  },
+  {
+    id: 'coming-soon-2',
+    title: 'Dice & Dares',
+    subtitle: 'Coming soon.',
+    route: '',
+    enabled: false,
+  },
+];
+
+export default function GamesScreen() {
+  const { tokens } = useWallet();
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.header}>
+          <Text style={styles.publisher}>{BRAND.studio} · {BRAND.publisher}</Text>
+          <Text style={styles.title}>{BRAND.app}</Text>
+          <Text style={styles.tagline}>{BRAND.tagline}</Text>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <View style={styles.walletRow}>
+          <Text style={styles.walletLabel}>Tokens</Text>
+          <Text style={styles.walletValue}>🪙 {tokens}</Text>
+        </View>
+
+        <Text style={styles.sectionHeader}>Games</Text>
+
+        {GAMES.map((g) => (
+          <GameCard key={g.id} game={g} />
+        ))}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function GameCard({ game }: { game: GameEntry }) {
+  const card = (
+    <View style={[styles.card, !game.enabled && styles.cardDisabled]}>
+      <Text style={styles.cardTitle}>{game.title}</Text>
+      <Text style={styles.cardSubtitle}>{game.subtitle}</Text>
+    </View>
+  );
+
+  if (!game.enabled) return card;
+
+  return (
+    <Link href={game.route as never} asChild>
+      <Pressable>{card}</Pressable>
+    </Link>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  safe: { flex: 1, backgroundColor: PALETTE.bg },
+  scroll: { padding: 20, paddingBottom: 48 },
+  header: { marginTop: 16, marginBottom: 24 },
+  publisher: { color: PALETTE.textDim, fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase' },
+  title: { color: PALETTE.text, fontSize: 36, fontWeight: '800', marginTop: 6 },
+  tagline: { color: PALETTE.accent, fontSize: 14, marginTop: 4, fontStyle: 'italic' },
+  walletRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: PALETTE.bgElevated,
+    borderWidth: 1,
+    borderColor: PALETTE.border,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 24,
   },
-  stepContainer: {
-    gap: 8,
+  walletLabel: { color: PALETTE.textDim, fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 },
+  walletValue: { color: PALETTE.accent, fontSize: 18, fontWeight: '700' },
+  sectionHeader: {
+    color: PALETTE.textDim,
+    fontSize: 12,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  card: {
+    backgroundColor: PALETTE.bgElevated,
+    borderWidth: 1,
+    borderColor: PALETTE.border,
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 12,
   },
+  cardDisabled: { opacity: 0.4 },
+  cardTitle: { color: PALETTE.text, fontSize: 20, fontWeight: '700' },
+  cardSubtitle: { color: PALETTE.textDim, fontSize: 13, marginTop: 4 },
 });
