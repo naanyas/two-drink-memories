@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { useCallback, useRef } from 'react';
 import {
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -11,6 +12,8 @@ import {
 
 import { PALETTE } from '@/constants/brand';
 import type { Hotspot } from '@/lib/puzzles';
+
+const IS_WEB = Platform.OS === 'web';
 
 type Props = {
   // Either a require() bundled asset or a remote URI string.
@@ -36,48 +39,57 @@ export function HuntCanvas({
   imageAspectRatio = 800 / 1000,
   hintsVisible = false,
 }: Props) {
-  // We track the wrap's onscreen rect so we can compute click position
-  // even when the synthetic event doesn't fill in locationX/Y (which can
-  // happen on react-native-web when the click target is a nested child).
+  // On native we cache layout dimensions from onLayout and use the event's
+  // locationX/Y. On web that approach is unreliable — the layout can shift
+  // after onLayout fires (image load, font load, aspect-ratio kicking in)
+  // so the cached height is stale and hits land too high. Instead, on web
+  // we read the DOM rect synchronously on every click.
   const wrapRef = useRef<View>(null);
-  const layoutRef = useRef({ pageX: 0, pageY: 0, width: 0, height: 0 });
+  const layoutRef = useRef({ width: 0, height: 0 });
 
   const onLayout = useCallback((e: LayoutChangeEvent) => {
-    // Seed with the layout-event size in case measureInWindow hasn't run yet.
     layoutRef.current.width = e.nativeEvent.layout.width;
     layoutRef.current.height = e.nativeEvent.layout.height;
-    if (wrapRef.current) {
-      // measureInWindow gives viewport-relative coords on both native and web.
-      wrapRef.current.measureInWindow((x, y, w, h) => {
-        layoutRef.current = { pageX: x, pageY: y, width: w, height: h };
-      });
-    }
   }, []);
+
+  const computeClickPercent = useCallback(
+    (ev: { locationX?: number; locationY?: number; pageX?: number; pageY?: number }):
+      | { xPct: number; yPct: number }
+      | null => {
+      // On web: read the wrap's current bounding rect at click time. This is
+      // never stale — it's the actual rendered position of the element now.
+      if (IS_WEB && wrapRef.current && (wrapRef.current as unknown as HTMLElement).getBoundingClientRect) {
+        const rect = (wrapRef.current as unknown as HTMLElement).getBoundingClientRect();
+        // react-native-web sets nativeEvent.pageX/Y from the underlying
+        // event.pageX/Y, which includes window.scrollX/Y. getBoundingClientRect
+        // returns viewport coords (no scroll). So subtract scroll to align.
+        const scrollX = typeof window !== 'undefined' ? window.scrollX : 0;
+        const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+        if (typeof ev.pageX === 'number' && typeof ev.pageY === 'number') {
+          const xPx = ev.pageX - rect.left - scrollX;
+          const yPx = ev.pageY - rect.top - scrollY;
+          if (rect.width > 0 && rect.height > 0) {
+            return { xPct: xPx / rect.width, yPct: yPx / rect.height };
+          }
+        }
+      }
+
+      // Native path (or web fallback): use cached layout + locationX/Y.
+      const { width, height } = layoutRef.current;
+      if (!width || !height) return null;
+      const lx = typeof ev.locationX === 'number' && !Number.isNaN(ev.locationX) ? ev.locationX : null;
+      const ly = typeof ev.locationY === 'number' && !Number.isNaN(ev.locationY) ? ev.locationY : null;
+      if (lx === null || ly === null) return null;
+      return { xPct: lx / width, yPct: ly / height };
+    },
+    [],
+  );
 
   const handlePress = useCallback(
     (e: { nativeEvent: { locationX?: number; locationY?: number; pageX?: number; pageY?: number } }) => {
-      const ev = e.nativeEvent;
-      const { width, height, pageX: wrapX, pageY: wrapY } = layoutRef.current;
-      if (!width || !height) return;
-
-      // Prefer locationX/Y (relative to the view); fall back to
-      // pageX/Y - wrap position. Either gives us pixels within the canvas.
-      let xPx: number | undefined;
-      let yPx: number | undefined;
-      if (typeof ev.locationX === 'number' && !Number.isNaN(ev.locationX)) {
-        xPx = ev.locationX;
-        yPx = ev.locationY;
-      } else if (typeof ev.pageX === 'number' && !Number.isNaN(ev.pageX)) {
-        xPx = ev.pageX - wrapX;
-        yPx = ev.pageY - wrapY;
-      }
-      if (xPx === undefined || yPx === undefined) return;
-
-      const xPct = xPx / width;
-      const yPct = yPx / height;
-
-      // Skip clicks that landed outside the visible canvas (shouldn't happen
-      // but possible with stale layout refs during quick resizes).
+      const result = computeClickPercent(e.nativeEvent);
+      if (!result) return;
+      const { xPct, yPct } = result;
       if (xPct < 0 || xPct > 1 || yPct < 0 || yPct > 1) return;
 
       const hit = hotspots.find((h) => {
@@ -90,7 +102,7 @@ export function HuntCanvas({
       if (hit) onHit(hit.id);
       else onMiss(xPct, yPct);
     },
-    [hotspots, foundIds, onHit, onMiss],
+    [hotspots, foundIds, onHit, onMiss, computeClickPercent],
   );
 
   return (
