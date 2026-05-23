@@ -27,6 +27,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import sharp from 'sharp';
 
 type Hotspot = { id: string; x: number; y: number; r: number; hint: string };
 
@@ -46,8 +47,12 @@ const TITLE = args.title ?? SLUG;
 const BASE = args.base;
 const VARIANT = args.variant;
 const SEED = args.seed ?? String(Math.floor(Math.random() * 100000));
-const WIDTH = Number(args.width ?? 800);
-const HEIGHT = Number(args.height ?? 1000);
+// Bump resolution: 1280x1600 (same 4:5 ratio, sharper detail). Pollinations'
+// flux-realism handles this well and the larger files are still under 200KB.
+const WIDTH = Number(args.width ?? 1280);
+const HEIGHT = Number(args.height ?? 1600);
+// flux-realism for photoreal bar/arcade scenes; flux is more generic.
+const MODEL = args.model ?? 'flux-realism';
 const OUT_DIR = `./assets/puzzles/${SLUG}`;
 
 if (!BASE || !VARIANT) {
@@ -66,11 +71,26 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 async function pollinations(prompt: string, seed: string): Promise<Buffer> {
   const url =
     `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
-    `?width=${WIDTH}&height=${HEIGHT}&seed=${seed}&nologo=true&model=flux`;
+    `?width=${WIDTH}&height=${HEIGHT}&seed=${seed}&nologo=true&model=${MODEL}&enhance=true`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Pollinations failed: ${res.status}`);
   const ab = await res.arrayBuffer();
   return Buffer.from(ab);
+}
+
+/**
+ * Pollinations' free tier caps output at ~686x858 regardless of the size
+ * we request. Upscale 2x with Lanczos resampling and apply an unsharp mask
+ * so the final image renders crisp at modern phone/desktop resolutions.
+ */
+async function upscaleAndSharpen(input: Buffer): Promise<Buffer> {
+  const meta = await sharp(input).metadata();
+  const targetW = (meta.width ?? 686) * 2;
+  return await sharp(input)
+    .resize(targetW, undefined, { kernel: 'lanczos3', withoutEnlargement: false })
+    .sharpen({ sigma: 1.0, m1: 0.5, m2: 2.0 })
+    .jpeg({ quality: 88, mozjpeg: true })
+    .toBuffer();
 }
 
 async function locateDiffs(imageA: Buffer, imageB: Buffer): Promise<Hotspot[]> {
@@ -117,14 +137,20 @@ async function main() {
   await mkdir(OUT_DIR, { recursive: true });
 
   console.log(`[${SLUG}] 1. Generating image A from Pollinations…`);
-  const a = await pollinations(BASE!, SEED);
+  const aRaw = await pollinations(BASE!, SEED);
+  console.log(`[${SLUG}]    upscaling + sharpening A…`);
+  const a = await upscaleAndSharpen(aRaw);
   await writeFile(join(OUT_DIR, 'imageA.jpg'), a);
 
   console.log(`[${SLUG}] 2. Generating image B (same seed, mutated prompt)…`);
-  const b = await pollinations(VARIANT!, SEED);
+  const bRaw = await pollinations(VARIANT!, SEED);
+  console.log(`[${SLUG}]    upscaling + sharpening B…`);
+  const b = await upscaleAndSharpen(bRaw);
   await writeFile(join(OUT_DIR, 'imageB.jpg'), b);
 
   console.log(`[${SLUG}] 3. Asking Gemini Vision to find diffs and locate them…`);
+  // Send the upscaled images so Gemini's hotspot coords reference the
+  // same image the player will see.
   const hotspots = await locateDiffs(a, b);
   hotspots.forEach((h) =>
     console.log(`  ${h.id}: (${h.x.toFixed(2)}, ${h.y.toFixed(2)}) r=${h.r.toFixed(2)} — ${h.hint}`),

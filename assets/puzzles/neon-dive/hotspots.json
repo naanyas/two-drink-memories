@@ -1,47 +1,47 @@
 {
   "title": "Neon Dive",
   "slug": "neon-dive",
-  "basePrompt": "crowded neon dive bar at night photoreal eye-level jukebox in corner pool table beer signs on brick walls",
-  "variantPrompt": "crowded neon dive bar at night photoreal eye-level vintage record player in corner pool table movie posters on brick walls",
+  "basePrompt": "crowded neon dive bar at night, sharp focus, photorealistic, ultra detailed, eye-level wide shot, jukebox in corner, pool table, beer signs on brick walls, warm cinematic lighting",
+  "variantPrompt": "crowded neon dive bar at night, sharp focus, photorealistic, ultra detailed, eye-level wide shot, vintage record player in corner, pool table, movie posters on brick walls, warm cinematic lighting",
   "seed": "42",
-  "width": 800,
-  "height": 1000,
+  "width": 1280,
+  "height": 1600,
   "hotspots": [
     {
       "id": "h1",
-      "x": 0.22,
-      "y": 0.22,
+      "x": 0.15,
+      "y": 0.15,
       "r": 0.09,
-      "hint": "Left wall neon text"
+      "hint": "Left wall sign"
     },
     {
       "id": "h2",
-      "x": 0.47,
-      "y": 0.4,
-      "r": 0.08,
-      "hint": "Central arcade screen"
+      "x": 0.18,
+      "y": 0.6,
+      "r": 0.1,
+      "hint": "Left table type"
     },
     {
       "id": "h3",
-      "x": 0.87,
-      "y": 0.27,
-      "r": 0.09,
-      "hint": "Round sign on the right wall"
+      "x": 0.45,
+      "y": 0.4,
+      "r": 0.08,
+      "hint": "Arcade screen content"
     },
     {
       "id": "h4",
-      "x": 0.92,
-      "y": 0.13,
+      "x": 0.72,
+      "y": 0.38,
       "r": 0.08,
-      "hint": "Pool table lamp shade"
+      "hint": "Pendant lamps"
     },
     {
       "id": "h5",
-      "x": 0.8,
-      "y": 0.57,
-      "r": 0.09,
-      "hint": "Pool table balls"
+      "x": 0.9,
+      "y": 0.15,
+      "r": 0.1,
+      "hint": "Top right poster"
     }
   ],
-  "generatedAt": "2026-05-23T13:16:28.383Z"
+  "generatedAt": "2026-05-23T14:05:53.298Z"
 }

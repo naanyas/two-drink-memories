@@ -1,54 +1,47 @@
 {
   "title": "Retro Arcade",
   "slug": "retro-arcade",
-  "basePrompt": "dimly lit 1980s arcade interior photoreal eye-level upright arcade cabinets neon ceiling tubes carpet kid playing in foreground",
-  "variantPrompt": "dimly lit 1980s arcade interior photoreal eye-level pinball machines neon ceiling tubes carpet teen playing in foreground",
+  "basePrompt": "dimly lit 1980s arcade interior, sharp focus, photorealistic, ultra detailed, eye-level wide shot, upright arcade cabinets glowing, neon ceiling tubes, geometric carpet, kid playing in foreground",
+  "variantPrompt": "dimly lit 1980s arcade interior, sharp focus, photorealistic, ultra detailed, eye-level wide shot, pinball machines glowing, neon ceiling tubes, geometric carpet, teen playing in foreground",
   "seed": "137",
-  "width": 800,
-  "height": 1000,
+  "width": 1280,
+  "height": 1600,
   "hotspots": [
     {
       "id": "h1",
-      "x": 0.21,
-      "y": 0.45,
+      "x": 0.5,
+      "y": 0.15,
       "r": 0.08,
-      "hint": "Left machine's screen content"
+      "hint": "Central ceiling light"
     },
     {
       "id": "h2",
-      "x": 0.25,
-      "y": 0.28,
+      "x": 0.2,
+      "y": 0.3,
       "r": 0.08,
-      "hint": "Marquee text color on the left"
+      "hint": "Left machine's marquee"
     },
     {
       "id": "h3",
-      "x": 0.74,
-      "y": 0.36,
-      "r": 0.08,
-      "hint": "Right machine's marquee light color"
+      "x": 0.93,
+      "y": 0.85,
+      "r": 0.07,
+      "hint": "Base of rightmost machine"
     },
     {
       "id": "h4",
-      "x": 0.78,
-      "y": 0.71,
-      "r": 0.08,
-      "hint": "Front panel light on the right"
+      "x": 0.84,
+      "y": 0.35,
+      "r": 0.07,
+      "hint": "Right machine's light bar"
     },
     {
       "id": "h5",
-      "x": 0.52,
-      "y": 0.34,
+      "x": 0.45,
+      "y": 0.65,
       "r": 0.07,
-      "hint": "Ceiling lights arrangement"
-    },
-    {
-      "id": "h6",
-      "x": 0.47,
-      "y": 0.47,
-      "r": 0.08,
-      "hint": "Central machine's screen content"
+      "hint": "Boy's right arm"
     }
   ],
-  "generatedAt": "2026-05-23T13:19:28.688Z"
+  "generatedAt": "2026-05-23T14:06:10.505Z"
 }

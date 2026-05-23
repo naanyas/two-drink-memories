@@ -1,54 +1,47 @@
 {
   "title": "Sports Bar Saturday",
   "slug": "sports-bar",
-  "basePrompt": "busy sports bar on game night photoreal eye-level multiple TVs showing football fans in jerseys long wooden bar bartender pouring draft hanging pendant lights",
-  "variantPrompt": "busy sports bar on game night photoreal eye-level multiple TVs showing basketball fans in jerseys long wooden bar bartender pouring draft hanging chandelier",
+  "basePrompt": "busy sports bar on game night, sharp focus, photorealistic, ultra detailed, eye-level wide shot, multiple TVs showing football, fans in jerseys cheering, long wooden bar, bartender pouring draft, hanging pendant lights",
+  "variantPrompt": "busy sports bar on game night, sharp focus, photorealistic, ultra detailed, eye-level wide shot, multiple TVs showing basketball, fans in jerseys cheering, long wooden bar, bartender pouring draft, hanging chandelier",
   "seed": "256",
-  "width": 800,
-  "height": 1000,
+  "width": 1280,
+  "height": 1600,
   "hotspots": [
     {
-      "id": "d1",
-      "x": 0.17,
-      "y": 0.22,
-      "r": 0.09,
-      "hint": "Content on the big screen on the left"
+      "id": "h1",
+      "x": 0.18,
+      "y": 0.25,
+      "r": 0.1,
+      "hint": "Left TV screen content"
     },
     {
-      "id": "d2",
-      "x": 0.28,
+      "id": "h2",
+      "x": 0.41,
+      "y": 0.62,
+      "r": 0.09,
+      "hint": "Person's arm pose"
+    },
+    {
+      "id": "h3",
+      "x": 0.6,
+      "y": 0.7,
+      "r": 0.08,
+      "hint": "Drinks on the counter"
+    },
+    {
+      "id": "h4",
+      "x": 0.9,
+      "y": 0.55,
+      "r": 0.09,
+      "hint": "Rightmost person's arm"
+    },
+    {
+      "id": "h5",
+      "x": 0.4,
       "y": 0.26,
       "r": 0.08,
-      "hint": "The vertical screen next to the large left one"
-    },
-    {
-      "id": "d3",
-      "x": 0.85,
-      "y": 0.31,
-      "r": 0.1,
-      "hint": "The big screen on the right side of the bar"
-    },
-    {
-      "id": "d4",
-      "x": 0.39,
-      "y": 0.72,
-      "r": 0.07,
-      "hint": "A drink on the bar top"
-    },
-    {
-      "id": "d5",
-      "x": 0.35,
-      "y": 0.58,
-      "r": 0.08,
-      "hint": "The jacket of a person sitting at the bar"
-    },
-    {
-      "id": "d6",
-      "x": 0.65,
-      "y": 0.37,
-      "r": 0.06,
-      "hint": "A hanging lamp near the center"
+      "hint": "Mid-left TV content"
     }
   ],
-  "generatedAt": "2026-05-23T13:22:29.809Z"
+  "generatedAt": "2026-05-23T14:06:28.528Z"
 }
