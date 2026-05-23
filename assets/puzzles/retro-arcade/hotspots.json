@@ -2,46 +2,44 @@
   "title": "Retro Arcade",
   "slug": "retro-arcade",
   "basePrompt": "dimly lit 1980s arcade interior, sharp focus, photorealistic, ultra detailed, eye-level wide shot, upright arcade cabinets glowing, neon ceiling tubes, geometric carpet, kid playing in foreground",
-  "variantPrompt": "dimly lit 1980s arcade interior, sharp focus, photorealistic, ultra detailed, eye-level wide shot, pinball machines glowing, neon ceiling tubes, geometric carpet, teen playing in foreground",
   "seed": "137",
-  "width": 1280,
-  "height": 1600,
+  "markerCount": 5,
   "hotspots": [
     {
       "id": "h1",
-      "x": 0.5,
-      "y": 0.15,
-      "r": 0.13,
-      "hint": "Central ceiling light"
+      "x": 0.7524735722690821,
+      "y": 0.30359023325145246,
+      "r": 0.07,
+      "hint": "red circle"
     },
     {
       "id": "h2",
-      "x": 0.2,
-      "y": 0.3,
-      "r": 0.13,
-      "hint": "Left machine's marquee"
+      "x": 0.42258667983114717,
+      "y": 0.5207634607329965,
+      "r": 0.07,
+      "hint": "teal square"
     },
     {
       "id": "h3",
-      "x": 0.93,
-      "y": 0.85,
-      "r": 0.13,
-      "hint": "Base of rightmost machine"
+      "x": 0.7683759665116668,
+      "y": 0.7590146871283651,
+      "r": 0.07,
+      "hint": "yellow star"
     },
     {
       "id": "h4",
-      "x": 0.84,
-      "y": 0.35,
-      "r": 0.13,
-      "hint": "Right machine's light bar"
+      "x": 0.22034720778465272,
+      "y": 0.189172300696373,
+      "r": 0.07,
+      "hint": "purple diamond"
     },
     {
       "id": "h5",
-      "x": 0.45,
-      "y": 0.65,
-      "r": 0.13,
-      "hint": "Boy's right arm"
+      "x": 0.5058959757909179,
+      "y": 0.8161416728049516,
+      "r": 0.07,
+      "hint": "green triangle"
     }
   ],
-  "generatedAt": "2026-05-23T14:06:10.505Z"
+  "generatedAt": "2026-05-23T14:37:20.285Z"
 }

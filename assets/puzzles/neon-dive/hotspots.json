@@ -2,46 +2,44 @@
   "title": "Neon Dive",
   "slug": "neon-dive",
   "basePrompt": "crowded neon dive bar at night, sharp focus, photorealistic, ultra detailed, eye-level wide shot, jukebox in corner, pool table, beer signs on brick walls, warm cinematic lighting",
-  "variantPrompt": "crowded neon dive bar at night, sharp focus, photorealistic, ultra detailed, eye-level wide shot, vintage record player in corner, pool table, movie posters on brick walls, warm cinematic lighting",
   "seed": "42",
-  "width": 1280,
-  "height": 1600,
+  "markerCount": 5,
   "hotspots": [
     {
       "id": "h1",
-      "x": 0.15,
-      "y": 0.15,
-      "r": 0.13,
-      "hint": "Left wall sign"
+      "x": 0.1329364247620106,
+      "y": 0.610398163832724,
+      "r": 0.07,
+      "hint": "red circle"
     },
     {
       "id": "h2",
-      "x": 0.18,
-      "y": 0.6,
-      "r": 0.13,
-      "hint": "Left table type"
+      "x": 0.4521033635362983,
+      "y": 0.7277146613225342,
+      "r": 0.07,
+      "hint": "teal square"
     },
     {
       "id": "h3",
-      "x": 0.45,
-      "y": 0.4,
-      "r": 0.13,
-      "hint": "Arcade screen content"
+      "x": 0.7073854489251972,
+      "y": 0.295476352609694,
+      "r": 0.07,
+      "hint": "yellow star"
     },
     {
       "id": "h4",
-      "x": 0.72,
-      "y": 0.38,
-      "r": 0.13,
-      "hint": "Pendant lamps"
+      "x": 0.14359694179147484,
+      "y": 0.414823896996677,
+      "r": 0.07,
+      "hint": "purple diamond"
     },
     {
       "id": "h5",
-      "x": 0.9,
-      "y": 0.15,
-      "r": 0.13,
-      "hint": "Top right poster"
+      "x": 0.7645566135644913,
+      "y": 0.8001895995810628,
+      "r": 0.07,
+      "hint": "green triangle"
     }
   ],
-  "generatedAt": "2026-05-23T14:05:53.298Z"
+  "generatedAt": "2026-05-23T14:37:19.015Z"
 }

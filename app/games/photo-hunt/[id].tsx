@@ -118,11 +118,12 @@ export default function PhotoHuntScreen() {
         <View style={styles.howTo}>
           <Text style={styles.howToHeader}>How to play</Text>
           <Text style={styles.howToBody}>
-            Two scenes. <Text style={styles.howToStrong}>{puzzle.hotspots.length}</Text> small
-            differences hidden in image{' '}
-            <Text style={styles.howToStrong}>B</Text>. Tap a difference in{' '}
-            <Text style={styles.howToStrong}>either</Text> image — a green ring confirms a
-            hit on both. Find them all before the clock runs out.
+            Image <Text style={styles.howToStrong}>A</Text> is the clean scene. Image{' '}
+            <Text style={styles.howToStrong}>B</Text> has{' '}
+            <Text style={styles.howToStrong}>{puzzle.hotspots.length}</Text> small colored
+            markers added to it. Tap each marker (on either image) to capture it — a green
+            ring confirms a hit. Stuck? Hit{' '}
+            <Text style={styles.howToStrong}>Show hints</Text> to reveal where they are.
           </Text>
         </View>
 
