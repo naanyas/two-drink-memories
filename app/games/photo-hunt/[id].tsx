@@ -29,6 +29,9 @@ export default function PhotoHuntScreen() {
   const [misses, setMisses] = useState<{ x: number; y: number; id: number }[]>([]);
   const [secondsLeft, setSecondsLeft] = useState(puzzle?.timeLimitSec ?? 120);
   const missCounter = useRef(0);
+  // "Show hints" briefly draws pulsing rings around remaining hotspots.
+  // Useful while we tune Gemini's coord detection and for first-time players.
+  const [hintsVisible, setHintsVisible] = useState(false);
 
   // Side-by-side on wider screens (tablet + desktop). Stacked on phones.
   const { width: screenWidth } = useWindowDimensions();
@@ -93,6 +96,11 @@ export default function PhotoHuntScreen() {
     }, 600);
   };
 
+  const handleShowHints = () => {
+    setHintsVisible(true);
+    setTimeout(() => setHintsVisible(false), 2500);
+  };
+
   const isPlayable = status === 'playing';
 
   return (
@@ -120,11 +128,18 @@ export default function PhotoHuntScreen() {
         </View>
 
         {status === 'playing' && (
-          <Hud
-            found={foundIds.size}
-            total={puzzle.hotspots.length}
-            secondsLeft={secondsLeft}
-          />
+          <>
+            <Hud
+              found={foundIds.size}
+              total={puzzle.hotspots.length}
+              secondsLeft={secondsLeft}
+            />
+            <View style={styles.controlRow}>
+              <Pressable onPress={handleShowHints} style={styles.hintButton}>
+                <Text style={styles.hintButtonText}>👁 Show hints</Text>
+              </Pressable>
+            </View>
+          </>
         )}
 
         <View style={[styles.canvases, sideBySide && styles.canvasesRow]}>
@@ -138,6 +153,7 @@ export default function PhotoHuntScreen() {
               misses={isPlayable ? misses : []}
               onHit={isPlayable ? handleHit : () => {}}
               onMiss={isPlayable ? handleMiss : () => {}}
+              hintsVisible={hintsVisible}
             />
           </View>
           <View style={styles.gap} />
@@ -153,6 +169,7 @@ export default function PhotoHuntScreen() {
               misses={isPlayable ? misses : []}
               onHit={isPlayable ? handleHit : () => {}}
               onMiss={isPlayable ? handleMiss : () => {}}
+              hintsVisible={hintsVisible}
             />
           </View>
         </View>
@@ -247,6 +264,20 @@ const styles = StyleSheet.create({
   canvasesRow: { flexDirection: 'row', alignItems: 'flex-start' },
   canvasCol: { width: '100%' },
   canvasColRow: { flex: 1 },
+  controlRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 8,
+  },
+  hintButton: {
+    backgroundColor: PALETTE.bgElevated,
+    borderWidth: 1,
+    borderColor: PALETTE.border,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  hintButtonText: { color: PALETTE.text, fontSize: 13, fontWeight: '600' },
   canvasCaption: {
     color: PALETTE.textDim,
     fontSize: 12,

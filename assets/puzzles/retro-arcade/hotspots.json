@@ -11,35 +11,35 @@
       "id": "h1",
       "x": 0.5,
       "y": 0.15,
-      "r": 0.08,
+      "r": 0.13,
       "hint": "Central ceiling light"
     },
     {
       "id": "h2",
       "x": 0.2,
       "y": 0.3,
-      "r": 0.08,
+      "r": 0.13,
       "hint": "Left machine's marquee"
     },
     {
       "id": "h3",
       "x": 0.93,
       "y": 0.85,
-      "r": 0.07,
+      "r": 0.13,
       "hint": "Base of rightmost machine"
     },
     {
       "id": "h4",
       "x": 0.84,
       "y": 0.35,
-      "r": 0.07,
+      "r": 0.13,
       "hint": "Right machine's light bar"
     },
     {
       "id": "h5",
       "x": 0.45,
       "y": 0.65,
-      "r": 0.07,
+      "r": 0.13,
       "hint": "Boy's right arm"
     }
   ],

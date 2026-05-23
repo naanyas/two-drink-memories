@@ -120,7 +120,10 @@ async function locateDiffs(imageA: Buffer, imageB: Buffer): Promise<Hotspot[]> {
     id: h.id ?? `h${i + 1}`,
     x: clamp01(Number(h.x)),
     y: clamp01(Number(h.y)),
-    r: clamp(Number(h.r) || 0.09, 0.04, 0.18),
+    // Generous radius floor (0.13) — Gemini's coord detection isn't
+    // pixel-precise, so we widen the tappable target. Players still need
+    // to identify the right area; they just don't have to nail dead-center.
+    r: clamp(Number(h.r) || 0.13, 0.13, 0.20),
     hint: h.hint ?? '',
   }));
 }

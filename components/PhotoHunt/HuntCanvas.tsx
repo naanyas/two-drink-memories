@@ -24,6 +24,9 @@ type Props = {
   // Native aspect ratio of the image (width / height). The canvas locks
   // to this ratio so percentage-based hotspot coords always line up.
   imageAspectRatio?: number;
+  // When true, draws semi-transparent rings around UNFOUND hotspots —
+  // the "Show hints" button on the parent page toggles this for ~2.5s.
+  hintsVisible?: boolean;
 };
 
 export function HuntCanvas({
@@ -35,6 +38,7 @@ export function HuntCanvas({
   onMiss,
   label,
   imageAspectRatio = 800 / 1000,
+  hintsVisible = false,
 }: Props) {
   const sizeRef = useRef({ width: 0, height: 0 });
 
@@ -105,6 +109,25 @@ export function HuntCanvas({
           style={[styles.missMark, { left: `${m.x * 100}%`, top: `${m.y * 100}%` }]}
         />
       ))}
+
+      {hintsVisible &&
+        hotspots
+          .filter((h) => !foundIds.has(h.id))
+          .map((h) => (
+            <View
+              key={`hint-${h.id}`}
+              pointerEvents="none"
+              style={[
+                styles.hintMark,
+                {
+                  left: `${(h.x - h.r) * 100}%`,
+                  top: `${(h.y - h.r) * 100}%`,
+                  width: `${h.r * 2 * 100}%`,
+                  aspectRatio: 1,
+                },
+              ]}
+            />
+          ))}
     </View>
   );
 }
@@ -155,5 +178,13 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: PALETTE.danger,
     backgroundColor: 'rgba(229, 105, 91, 0.35)',
+  },
+  hintMark: {
+    position: 'absolute',
+    borderWidth: 3,
+    borderColor: PALETTE.accent,
+    borderRadius: 999,
+    backgroundColor: 'rgba(217, 119, 87, 0.18)',
+    borderStyle: 'dashed',
   },
 });
