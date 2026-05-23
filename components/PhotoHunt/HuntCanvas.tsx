@@ -1,12 +1,13 @@
 import { Image } from 'expo-image';
 import { useCallback, useRef } from 'react';
-import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { Pressable, StyleSheet, View, type ImageSourcePropType, type LayoutChangeEvent } from 'react-native';
 
 import { PALETTE } from '@/constants/brand';
 import type { Hotspot } from '@/lib/puzzles';
 
 type Props = {
-  imageUrl: string;
+  // Accept either a require() bundled asset or a remote URI.
+  imageSource: ImageSourcePropType | string;
   hotspots: Hotspot[];
   foundIds: Set<string>;
   misses: { x: number; y: number; id: number }[];
@@ -16,7 +17,7 @@ type Props = {
 };
 
 export function HuntCanvas({
-  imageUrl,
+  imageSource,
   hotspots,
   foundIds,
   misses,
@@ -61,7 +62,11 @@ export function HuntCanvas({
         </View>
       </View>
       <Pressable style={StyleSheet.absoluteFill} onPress={handlePress}>
-        <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
+        <Image
+          source={typeof imageSource === 'string' ? { uri: imageSource } : imageSource}
+          style={styles.image}
+          contentFit="cover"
+        />
       </Pressable>
 
       {hotspots

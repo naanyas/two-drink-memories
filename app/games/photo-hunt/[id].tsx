@@ -100,7 +100,7 @@ export default function PhotoHuntScreen() {
         <View style={styles.canvases}>
           <HuntCanvas
             label="A"
-            imageUrl={puzzle.imageA}
+            imageSource={puzzle.imageA}
             hotspots={puzzle.hotspots}
             foundIds={status === 'playing' || status === 'won' ? foundIds : new Set()}
             misses={status === 'playing' ? misses : []}
@@ -110,7 +110,7 @@ export default function PhotoHuntScreen() {
           <View style={styles.gap} />
           <HuntCanvas
             label="B"
-            imageUrl={puzzle.imageB}
+            imageSource={puzzle.imageB}
             hotspots={puzzle.hotspots}
             foundIds={status === 'playing' || status === 'won' ? foundIds : new Set()}
             misses={status === 'playing' ? misses : []}

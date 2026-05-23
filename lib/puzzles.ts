@@ -1,3 +1,9 @@
+import neonDiveHotspots from '../assets/puzzles/neon-dive/hotspots.json';
+import retroArcadeHotspots from '../assets/puzzles/retro-arcade/hotspots.json';
+import sportsBarHotspots from '../assets/puzzles/sports-bar/hotspots.json';
+
+import type { ImageSourcePropType } from 'react-native';
+
 export type Hotspot = {
   id: string;
   x: number;
@@ -9,31 +15,42 @@ export type Hotspot = {
 export type Puzzle = {
   id: string;
   title: string;
-  imageA: string;
-  imageB: string;
+  imageA: ImageSourcePropType;
+  imageB: ImageSourcePropType;
   hotspots: Hotspot[];
   tokenCost: number;
   timeLimitSec: number;
 };
 
-const PLACEHOLDER_A = 'https://picsum.photos/seed/bar-a/800/1000';
-const PLACEHOLDER_B = 'https://picsum.photos/seed/bar-b/800/1000';
-
+// require() instead of URI so Metro/Expo bundles the asset for both
+// mobile (number id) and web (hashed URL in dist/_expo/static/).
 export const SAMPLE_PUZZLES: Puzzle[] = [
   {
-    id: 'sample-neon-dive',
+    id: 'neon-dive',
     title: 'Neon Dive',
-    imageA: PLACEHOLDER_A,
-    imageB: PLACEHOLDER_B,
+    imageA: require('../assets/puzzles/neon-dive/imageA.jpg'),
+    imageB: require('../assets/puzzles/neon-dive/imageB.jpg'),
+    hotspots: neonDiveHotspots.hotspots as Hotspot[],
     tokenCost: 1,
     timeLimitSec: 120,
-    hotspots: [
-      { id: 'h1', x: 0.18, y: 0.22, r: 0.06, hint: 'upper left' },
-      { id: 'h2', x: 0.62, y: 0.31, r: 0.06, hint: 'near the window' },
-      { id: 'h3', x: 0.74, y: 0.58, r: 0.06, hint: 'behind the bar' },
-      { id: 'h4', x: 0.28, y: 0.71, r: 0.06, hint: 'on the stool' },
-      { id: 'h5', x: 0.5, y: 0.88, r: 0.06, hint: 'lower middle' },
-    ],
+  },
+  {
+    id: 'retro-arcade',
+    title: 'Retro Arcade',
+    imageA: require('../assets/puzzles/retro-arcade/imageA.jpg'),
+    imageB: require('../assets/puzzles/retro-arcade/imageB.jpg'),
+    hotspots: retroArcadeHotspots.hotspots as Hotspot[],
+    tokenCost: 1,
+    timeLimitSec: 120,
+  },
+  {
+    id: 'sports-bar',
+    title: 'Sports Bar Saturday',
+    imageA: require('../assets/puzzles/sports-bar/imageA.jpg'),
+    imageB: require('../assets/puzzles/sports-bar/imageB.jpg'),
+    hotspots: sportsBarHotspots.hotspots as Hotspot[],
+    tokenCost: 1,
+    timeLimitSec: 120,
   },
 ];
 

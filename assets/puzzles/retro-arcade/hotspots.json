@@ -1,0 +1,54 @@
+{
+  "title": "Retro Arcade",
+  "slug": "retro-arcade",
+  "basePrompt": "dimly lit 1980s arcade interior photoreal eye-level upright arcade cabinets neon ceiling tubes carpet kid playing in foreground",
+  "variantPrompt": "dimly lit 1980s arcade interior photoreal eye-level pinball machines neon ceiling tubes carpet teen playing in foreground",
+  "seed": "137",
+  "width": 800,
+  "height": 1000,
+  "hotspots": [
+    {
+      "id": "h1",
+      "x": 0.21,
+      "y": 0.45,
+      "r": 0.08,
+      "hint": "Left machine's screen content"
+    },
+    {
+      "id": "h2",
+      "x": 0.25,
+      "y": 0.28,
+      "r": 0.08,
+      "hint": "Marquee text color on the left"
+    },
+    {
+      "id": "h3",
+      "x": 0.74,
+      "y": 0.36,
+      "r": 0.08,
+      "hint": "Right machine's marquee light color"
+    },
+    {
+      "id": "h4",
+      "x": 0.78,
+      "y": 0.71,
+      "r": 0.08,
+      "hint": "Front panel light on the right"
+    },
+    {
+      "id": "h5",
+      "x": 0.52,
+      "y": 0.34,
+      "r": 0.07,
+      "hint": "Ceiling lights arrangement"
+    },
+    {
+      "id": "h6",
+      "x": 0.47,
+      "y": 0.47,
+      "r": 0.08,
+      "hint": "Central machine's screen content"
+    }
+  ],
+  "generatedAt": "2026-05-23T13:19:28.688Z"
+}

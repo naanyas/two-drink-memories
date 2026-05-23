@@ -1,0 +1,47 @@
+{
+  "title": "Neon Dive",
+  "slug": "neon-dive",
+  "basePrompt": "crowded neon dive bar at night photoreal eye-level jukebox in corner pool table beer signs on brick walls",
+  "variantPrompt": "crowded neon dive bar at night photoreal eye-level vintage record player in corner pool table movie posters on brick walls",
+  "seed": "42",
+  "width": 800,
+  "height": 1000,
+  "hotspots": [
+    {
+      "id": "h1",
+      "x": 0.22,
+      "y": 0.22,
+      "r": 0.09,
+      "hint": "Left wall neon text"
+    },
+    {
+      "id": "h2",
+      "x": 0.47,
+      "y": 0.4,
+      "r": 0.08,
+      "hint": "Central arcade screen"
+    },
+    {
+      "id": "h3",
+      "x": 0.87,
+      "y": 0.27,
+      "r": 0.09,
+      "hint": "Round sign on the right wall"
+    },
+    {
+      "id": "h4",
+      "x": 0.92,
+      "y": 0.13,
+      "r": 0.08,
+      "hint": "Pool table lamp shade"
+    },
+    {
+      "id": "h5",
+      "x": 0.8,
+      "y": 0.57,
+      "r": 0.09,
+      "hint": "Pool table balls"
+    }
+  ],
+  "generatedAt": "2026-05-23T13:16:28.383Z"
+}

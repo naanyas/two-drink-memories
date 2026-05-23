@@ -14,14 +14,18 @@ type GameEntry = {
   enabled: boolean;
 };
 
+// Each Photo Hunt puzzle gets its own card so visitors can try
+// different scenes without burning through tokens on the same image.
+const PHOTO_HUNT_GAMES: GameEntry[] = SAMPLE_PUZZLES.map((p) => ({
+  id: `photo-hunt-${p.id}`,
+  title: `Photo Hunt · ${p.title}`,
+  subtitle: `Spot ${p.hotspots.length} differences before time runs out.`,
+  route: `/games/photo-hunt/${p.id}`,
+  enabled: true,
+}));
+
 const GAMES: GameEntry[] = [
-  {
-    id: 'photo-hunt',
-    title: 'Photo Hunt',
-    subtitle: 'Spot the differences before time runs out.',
-    route: `/games/photo-hunt/${SAMPLE_PUZZLES[0].id}`,
-    enabled: true,
-  },
+  ...PHOTO_HUNT_GAMES,
   {
     id: 'coming-soon-1',
     title: 'Trivia Last Call',
