@@ -96,9 +96,8 @@ export default function PhotoHuntScreen() {
     }, 600);
   };
 
-  const handleShowHints = () => {
-    setHintsVisible(true);
-    setTimeout(() => setHintsVisible(false), 2500);
+  const handleToggleHints = () => {
+    setHintsVisible((v) => !v);
   };
 
   const isPlayable = status === 'playing';
@@ -135,8 +134,13 @@ export default function PhotoHuntScreen() {
               secondsLeft={secondsLeft}
             />
             <View style={styles.controlRow}>
-              <Pressable onPress={handleShowHints} style={styles.hintButton}>
-                <Text style={styles.hintButtonText}>👁 Show hints</Text>
+              <Pressable
+                onPress={handleToggleHints}
+                style={[styles.hintButton, hintsVisible && styles.hintButtonActive]}
+              >
+                <Text style={styles.hintButtonText}>
+                  {hintsVisible ? '👁 Hide hints' : '👁 Show hints'}
+                </Text>
               </Pressable>
             </View>
           </>
@@ -276,6 +280,10 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 8,
+  },
+  hintButtonActive: {
+    backgroundColor: 'rgba(217, 119, 87, 0.18)',
+    borderColor: PALETTE.accent,
   },
   hintButtonText: { color: PALETTE.text, fontSize: 13, fontWeight: '600' },
   canvasCaption: {
