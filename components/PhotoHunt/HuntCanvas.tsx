@@ -21,11 +21,7 @@ type Props = {
   onHit: (hotspotId: string) => void;
   onMiss: (xPct: number, yPct: number) => void;
   label: string;
-  // Native aspect ratio of the image (width / height). The canvas locks
-  // to this ratio so percentage-based hotspot coords always line up.
   imageAspectRatio?: number;
-  // When true, draws semi-transparent rings around UNFOUND hotspots —
-  // the "Show hints" button on the parent page toggles this for ~2.5s.
   hintsVisible?: boolean;
 };
 
@@ -40,21 +36,49 @@ export function HuntCanvas({
   imageAspectRatio = 800 / 1000,
   hintsVisible = false,
 }: Props) {
-  const sizeRef = useRef({ width: 0, height: 0 });
+  // We track the wrap's onscreen rect so we can compute click position
+  // even when the synthetic event doesn't fill in locationX/Y (which can
+  // happen on react-native-web when the click target is a nested child).
+  const wrapRef = useRef<View>(null);
+  const layoutRef = useRef({ pageX: 0, pageY: 0, width: 0, height: 0 });
 
   const onLayout = useCallback((e: LayoutChangeEvent) => {
-    sizeRef.current = {
-      width: e.nativeEvent.layout.width,
-      height: e.nativeEvent.layout.height,
-    };
+    // Seed with the layout-event size in case measureInWindow hasn't run yet.
+    layoutRef.current.width = e.nativeEvent.layout.width;
+    layoutRef.current.height = e.nativeEvent.layout.height;
+    if (wrapRef.current) {
+      // measureInWindow gives viewport-relative coords on both native and web.
+      wrapRef.current.measureInWindow((x, y, w, h) => {
+        layoutRef.current = { pageX: x, pageY: y, width: w, height: h };
+      });
+    }
   }, []);
 
   const handlePress = useCallback(
-    (e: { nativeEvent: { locationX: number; locationY: number } }) => {
-      const { width, height } = sizeRef.current;
+    (e: { nativeEvent: { locationX?: number; locationY?: number; pageX?: number; pageY?: number } }) => {
+      const ev = e.nativeEvent;
+      const { width, height, pageX: wrapX, pageY: wrapY } = layoutRef.current;
       if (!width || !height) return;
-      const xPct = e.nativeEvent.locationX / width;
-      const yPct = e.nativeEvent.locationY / height;
+
+      // Prefer locationX/Y (relative to the view); fall back to
+      // pageX/Y - wrap position. Either gives us pixels within the canvas.
+      let xPx: number | undefined;
+      let yPx: number | undefined;
+      if (typeof ev.locationX === 'number' && !Number.isNaN(ev.locationX)) {
+        xPx = ev.locationX;
+        yPx = ev.locationY;
+      } else if (typeof ev.pageX === 'number' && !Number.isNaN(ev.pageX)) {
+        xPx = ev.pageX - wrapX;
+        yPx = ev.pageY - wrapY;
+      }
+      if (xPx === undefined || yPx === undefined) return;
+
+      const xPct = xPx / width;
+      const yPct = yPx / height;
+
+      // Skip clicks that landed outside the visible canvas (shouldn't happen
+      // but possible with stale layout refs during quick resizes).
+      if (xPct < 0 || xPct > 1 || yPct < 0 || yPct > 1) return;
 
       const hit = hotspots.find((h) => {
         if (foundIds.has(h.id)) return false;
@@ -70,19 +94,31 @@ export function HuntCanvas({
   );
 
   return (
-    <View style={[styles.wrap, { aspectRatio: imageAspectRatio }]} onLayout={onLayout}>
-      <View style={styles.labelWrap}>
-        <View style={styles.labelPill}>
-          <Text style={styles.labelText}>{label}</Text>
-        </View>
-      </View>
+    <View
+      ref={wrapRef}
+      style={[styles.wrap, { aspectRatio: imageAspectRatio }]}
+      onLayout={onLayout}
+      collapsable={false}
+    >
       <Pressable style={StyleSheet.absoluteFill} onPress={handlePress}>
+        {/* pointerEvents="none" so clicks pass through to the Pressable.
+            Without this, react-native-web sometimes routes the click to
+            the Image and locationX/Y comes through as undefined. */}
         <Image
           source={typeof imageSource === 'string' ? { uri: imageSource } : imageSource}
           style={styles.image}
           contentFit="fill"
+          pointerEvents="none"
         />
       </Pressable>
+
+      {/* Label is rendered LAST so it sits visually above the image but
+          pointer-events stay none so it doesn't eat clicks. */}
+      <View style={styles.labelWrap} pointerEvents="none">
+        <View style={styles.labelPill}>
+          <Text style={styles.labelText}>{label}</Text>
+        </View>
+      </View>
 
       {hotspots
         .filter((h) => foundIds.has(h.id))
@@ -133,9 +169,6 @@ export function HuntCanvas({
 }
 
 const styles = StyleSheet.create({
-  // aspectRatio is applied inline so the canvas matches the image's
-  // native ratio. With contentFit="fill" + matching aspect = no crop,
-  // no letterbox, and percentage coords map directly to image space.
   wrap: {
     width: '100%',
     borderWidth: 1,
