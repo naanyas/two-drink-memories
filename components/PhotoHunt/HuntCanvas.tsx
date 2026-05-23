@@ -25,7 +25,9 @@ type Props = {
   onMiss: (xPct: number, yPct: number) => void;
   label: string;
   imageAspectRatio?: number;
-  hintsVisible?: boolean;
+  // When set, draws a dashed accent ring around exactly this hotspot.
+  // null/undefined → no hint shown.
+  hintTargetId?: string | null;
 };
 
 export function HuntCanvas({
@@ -37,7 +39,7 @@ export function HuntCanvas({
   onMiss,
   label,
   imageAspectRatio = 800 / 1000,
-  hintsVisible = false,
+  hintTargetId = null,
 }: Props) {
   // On native we cache layout dimensions from onLayout and use the event's
   // locationX/Y. On web that approach is unreliable — the layout can shift
@@ -158,9 +160,9 @@ export function HuntCanvas({
         />
       ))}
 
-      {hintsVisible &&
+      {hintTargetId &&
         hotspots
-          .filter((h) => !foundIds.has(h.id))
+          .filter((h) => h.id === hintTargetId && !foundIds.has(h.id))
           .map((h) => (
             <View
               key={`hint-${h.id}`}

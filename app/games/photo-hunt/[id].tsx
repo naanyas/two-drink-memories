@@ -29,9 +29,9 @@ export default function PhotoHuntScreen() {
   const [misses, setMisses] = useState<{ x: number; y: number; id: number }[]>([]);
   const [secondsLeft, setSecondsLeft] = useState(puzzle?.timeLimitSec ?? 120);
   const missCounter = useRef(0);
-  // "Show hints" briefly draws pulsing rings around remaining hotspots.
-  // Useful while we tune Gemini's coord detection and for first-time players.
-  const [hintsVisible, setHintsVisible] = useState(false);
+  // Single-hint mode: at most one hotspot is revealed at a time. Tapping
+  // "Show hint" picks a random unfound hotspot; tapping again hides it.
+  const [hintTargetId, setHintTargetId] = useState<string | null>(null);
 
   // Side-by-side on wider screens (tablet + desktop). Stacked on phones.
   const { width: screenWidth } = useWindowDimensions();
@@ -96,9 +96,27 @@ export default function PhotoHuntScreen() {
     }, 600);
   };
 
-  const handleToggleHints = () => {
-    setHintsVisible((v) => !v);
+  const handleToggleHint = () => {
+    if (!puzzle) return;
+    // Toggle off if a hint is already showing.
+    if (hintTargetId) {
+      setHintTargetId(null);
+      return;
+    }
+    // Pick a random unfound hotspot.
+    const unfound = puzzle.hotspots.filter((h) => !foundIds.has(h.id));
+    if (unfound.length === 0) return;
+    const pick = unfound[Math.floor(Math.random() * unfound.length)];
+    setHintTargetId(pick.id);
   };
+
+  // Auto-dismiss the hint once the player finds it — no point keeping the
+  // hint ring visible after the hotspot has been captured.
+  useEffect(() => {
+    if (hintTargetId && foundIds.has(hintTargetId)) {
+      setHintTargetId(null);
+    }
+  }, [hintTargetId, foundIds]);
 
   const isPlayable = status === 'playing';
 
@@ -136,11 +154,11 @@ export default function PhotoHuntScreen() {
             />
             <View style={styles.controlRow}>
               <Pressable
-                onPress={handleToggleHints}
-                style={[styles.hintButton, hintsVisible && styles.hintButtonActive]}
+                onPress={handleToggleHint}
+                style={[styles.hintButton, hintTargetId && styles.hintButtonActive]}
               >
                 <Text style={styles.hintButtonText}>
-                  {hintsVisible ? '👁 Hide hints' : '👁 Show hints'}
+                  {hintTargetId ? '👁 Hide hint' : '👁 Show a hint'}
                 </Text>
               </Pressable>
             </View>
@@ -158,7 +176,7 @@ export default function PhotoHuntScreen() {
               misses={isPlayable ? misses : []}
               onHit={isPlayable ? handleHit : () => {}}
               onMiss={isPlayable ? handleMiss : () => {}}
-              hintsVisible={hintsVisible}
+              hintTargetId={hintTargetId}
             />
           </View>
           <View style={styles.gap} />
@@ -174,7 +192,7 @@ export default function PhotoHuntScreen() {
               misses={isPlayable ? misses : []}
               onHit={isPlayable ? handleHit : () => {}}
               onMiss={isPlayable ? handleMiss : () => {}}
-              hintsVisible={hintsVisible}
+              hintTargetId={hintTargetId}
             />
           </View>
         </View>
