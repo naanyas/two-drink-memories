@@ -3,11 +3,5 @@
   "buildCommand": "npx expo export -p web",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "framework": null,
-  "rewrites": [
-    {
-      "source": "/games/photo-hunt/:slug",
-      "destination": "/games/photo-hunt/[id]"
-    }
-  ]
+  "framework": null
 }
