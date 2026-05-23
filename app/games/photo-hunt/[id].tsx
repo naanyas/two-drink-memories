@@ -1,6 +1,14 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Hud } from '@/components/PhotoHunt/Hud';
@@ -21,6 +29,10 @@ export default function PhotoHuntScreen() {
   const [misses, setMisses] = useState<{ x: number; y: number; id: number }[]>([]);
   const [secondsLeft, setSecondsLeft] = useState(puzzle?.timeLimitSec ?? 120);
   const missCounter = useRef(0);
+
+  // Side-by-side on wider screens (tablet + desktop). Stacked on phones.
+  const { width: screenWidth } = useWindowDimensions();
+  const sideBySide = screenWidth >= 720;
 
   useEffect(() => {
     if (status !== 'playing') return;
@@ -81,12 +93,30 @@ export default function PhotoHuntScreen() {
     }, 600);
   };
 
+  const isPlayable = status === 'playing';
+
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
-      <View style={styles.root}>
+      <ScrollView
+        style={styles.root}
+        contentContainerStyle={styles.rootContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.topRow}>
           <Text style={styles.title}>{puzzle.title}</Text>
           <Text style={styles.tokens}>🪙 {tokens}</Text>
+        </View>
+
+        {/* How to play — always visible, contextual to game state */}
+        <View style={styles.howTo}>
+          <Text style={styles.howToHeader}>How to play</Text>
+          <Text style={styles.howToBody}>
+            Two scenes. <Text style={styles.howToStrong}>{puzzle.hotspots.length}</Text> small
+            differences hidden in image{' '}
+            <Text style={styles.howToStrong}>B</Text>. Tap a difference in{' '}
+            <Text style={styles.howToStrong}>either</Text> image — a green ring confirms a
+            hit on both. Find them all before the clock runs out.
+          </Text>
         </View>
 
         {status === 'playing' && (
@@ -97,26 +127,34 @@ export default function PhotoHuntScreen() {
           />
         )}
 
-        <View style={styles.canvases}>
-          <HuntCanvas
-            label="A"
-            imageSource={puzzle.imageA}
-            hotspots={puzzle.hotspots}
-            foundIds={status === 'playing' || status === 'won' ? foundIds : new Set()}
-            misses={status === 'playing' ? misses : []}
-            onHit={status === 'playing' ? handleHit : () => {}}
-            onMiss={status === 'playing' ? handleMiss : () => {}}
-          />
+        <View style={[styles.canvases, sideBySide && styles.canvasesRow]}>
+          <View style={[styles.canvasCol, sideBySide && styles.canvasColRow]}>
+            <Text style={styles.canvasCaption}>Image A — original</Text>
+            <HuntCanvas
+              label="A"
+              imageSource={puzzle.imageA}
+              hotspots={puzzle.hotspots}
+              foundIds={isPlayable || status === 'won' ? foundIds : new Set()}
+              misses={isPlayable ? misses : []}
+              onHit={isPlayable ? handleHit : () => {}}
+              onMiss={isPlayable ? handleMiss : () => {}}
+            />
+          </View>
           <View style={styles.gap} />
-          <HuntCanvas
-            label="B"
-            imageSource={puzzle.imageB}
-            hotspots={puzzle.hotspots}
-            foundIds={status === 'playing' || status === 'won' ? foundIds : new Set()}
-            misses={status === 'playing' ? misses : []}
-            onHit={status === 'playing' ? handleHit : () => {}}
-            onMiss={status === 'playing' ? handleMiss : () => {}}
-          />
+          <View style={[styles.canvasCol, sideBySide && styles.canvasColRow]}>
+            <Text style={styles.canvasCaption}>
+              Image B — <Text style={styles.canvasCaptionStrong}>tap the differences</Text>
+            </Text>
+            <HuntCanvas
+              label="B"
+              imageSource={puzzle.imageB}
+              hotspots={puzzle.hotspots}
+              foundIds={isPlayable || status === 'won' ? foundIds : new Set()}
+              misses={isPlayable ? misses : []}
+              onHit={isPlayable ? handleHit : () => {}}
+              onMiss={isPlayable ? handleMiss : () => {}}
+            />
+          </View>
         </View>
 
         {status === 'prompt' && (
@@ -134,7 +172,7 @@ export default function PhotoHuntScreen() {
 
         {status === 'won' && (
           <Overlay>
-            <Text style={styles.overlayTitle}>You got 'em all 🎉</Text>
+            <Text style={styles.overlayTitle}>You got &apos;em all 🎉</Text>
             <Text style={styles.overlayBody}>
               {foundIds.size}/{puzzle.hotspots.length} with {secondsLeft}s to spare.
             </Text>
@@ -151,7 +189,7 @@ export default function PhotoHuntScreen() {
           <Overlay>
             <Text style={styles.overlayTitle}>Last call.</Text>
             <Text style={styles.overlayBody}>
-              Time's up — you found {foundIds.size}/{puzzle.hotspots.length}.
+              Time&apos;s up — you found {foundIds.size}/{puzzle.hotspots.length}.
             </Text>
             <Pressable onPress={handleStart} style={styles.ctaPrimary}>
               <Text style={styles.ctaPrimaryText}>Try Again</Text>
@@ -161,7 +199,7 @@ export default function PhotoHuntScreen() {
             </Pressable>
           </Overlay>
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -176,7 +214,8 @@ function Overlay({ children }: { children: React.ReactNode }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: PALETTE.bg },
-  root: { flex: 1, padding: 16 },
+  root: { flex: 1 },
+  rootContent: { padding: 16, paddingBottom: 32 },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -185,8 +224,38 @@ const styles = StyleSheet.create({
   },
   title: { color: PALETTE.text, fontSize: 22, fontWeight: '800' },
   tokens: { color: PALETTE.accent, fontSize: 16, fontWeight: '700' },
-  canvases: { flex: 1, flexDirection: 'column' },
-  gap: { height: 8 },
+  howTo: {
+    backgroundColor: PALETTE.bgElevated,
+    borderWidth: 1,
+    borderColor: PALETTE.border,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+  },
+  howToHeader: {
+    color: PALETTE.accent,
+    fontSize: 11,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  howToBody: { color: PALETTE.text, fontSize: 14, lineHeight: 20 },
+  howToStrong: { color: PALETTE.accent, fontWeight: '800' },
+  // Vertical stack by default (phone); side-by-side on >=720px (tablet/web).
+  canvases: { flexDirection: 'column' },
+  canvasesRow: { flexDirection: 'row', alignItems: 'flex-start' },
+  canvasCol: { width: '100%' },
+  canvasColRow: { flex: 1 },
+  canvasCaption: {
+    color: PALETTE.textDim,
+    fontSize: 12,
+    letterSpacing: 0.4,
+    marginBottom: 6,
+    marginTop: 4,
+  },
+  canvasCaptionStrong: { color: PALETTE.accent, fontWeight: '700' },
+  gap: { height: 12, width: 12 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   overlay: {
     ...StyleSheet.absoluteFillObject,
