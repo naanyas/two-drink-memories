@@ -138,10 +138,10 @@ export default function PhotoHuntScreen() {
           <Text style={styles.howToBody}>
             Image <Text style={styles.howToStrong}>A</Text> is the clean scene. Image{' '}
             <Text style={styles.howToStrong}>B</Text> has{' '}
-            <Text style={styles.howToStrong}>{puzzle.hotspots.length}</Text> small colored
-            markers added to it. Tap each marker (on either image) to capture it — a green
-            ring confirms a hit. Stuck? Hit{' '}
-            <Text style={styles.howToStrong}>Show hints</Text> to reveal where they are.
+            <Text style={styles.howToStrong}>{puzzle.hotspots.length}</Text> small areas
+            subtly altered (mirrored, rotated, hue-shifted, etc.). Tap each altered area
+            (on either image) to capture it — a green ring confirms a hit. Stuck? Hit{' '}
+            <Text style={styles.howToStrong}>Show a hint</Text> to reveal one location.
           </Text>
         </View>
 

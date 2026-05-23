@@ -72,53 +72,18 @@ async function upscaleAndSharpen(input: Buffer): Promise<Buffer> {
     .toBuffer();
 }
 
-// Five distinct color/shape combinations for the markers. Each is sized to
-// be clearly findable but small enough that it doesn't dominate the scene.
-// White outline ensures visibility against both dark and light backgrounds.
-type Marker = { color: string; shape: 'circle' | 'square' | 'triangle' | 'diamond' | 'star'; label: string };
-const MARKERS: Marker[] = [
-  { color: '#ff5a5f', shape: 'circle', label: 'red circle' },
-  { color: '#4ecdc4', shape: 'square', label: 'teal square' },
-  { color: '#ffd93d', shape: 'star', label: 'yellow star' },
-  { color: '#a78bfa', shape: 'diamond', label: 'purple diamond' },
-  { color: '#34d399', shape: 'triangle', label: 'green triangle' },
+// Subtle, photoreal distortions. Each one extracts a small patch from the
+// scene at a hotspot location, applies a natural-looking transformation,
+// and composites it back. The change is *of* the scene, not on top of it —
+// so it blends in instead of screaming "I'm a sticker".
+type Distortion = 'flop' | 'flip' | 'rotate180' | 'hueShift' | 'desaturate';
+const DISTORTIONS: { kind: Distortion; label: string }[] = [
+  { kind: 'flop', label: 'mirrored patch' },
+  { kind: 'rotate180', label: 'rotated patch' },
+  { kind: 'hueShift', label: 'hue-shifted patch' },
+  { kind: 'desaturate', label: 'desaturated patch' },
+  { kind: 'flip', label: 'vertically flipped patch' },
 ];
-
-function shapeSvg(shape: Marker['shape'], size: number, color: string): string {
-  const s = size;
-  const c = s / 2;
-  const r = s / 2 - 2;
-  switch (shape) {
-    case 'circle':
-      return `<circle cx="${c}" cy="${c}" r="${r}" fill="${color}" fill-opacity="0.92" stroke="white" stroke-width="2"/>`;
-    case 'square': {
-      const pad = 2;
-      return `<rect x="${pad}" y="${pad}" width="${s - 2 * pad}" height="${s - 2 * pad}" fill="${color}" fill-opacity="0.92" stroke="white" stroke-width="2" rx="3"/>`;
-    }
-    case 'triangle':
-      return `<polygon points="${c},2 ${s - 2},${s - 2} 2,${s - 2}" fill="${color}" fill-opacity="0.92" stroke="white" stroke-width="2" stroke-linejoin="round"/>`;
-    case 'diamond':
-      return `<polygon points="${c},2 ${s - 2},${c} ${c},${s - 2} 2,${c}" fill="${color}" fill-opacity="0.92" stroke="white" stroke-width="2" stroke-linejoin="round"/>`;
-    case 'star': {
-      const o = c;
-      const outer = c - 2;
-      const inner = outer * 0.45;
-      const pts: string[] = [];
-      for (let i = 0; i < 10; i++) {
-        const angle = (Math.PI / 5) * i - Math.PI / 2;
-        const radius = i % 2 === 0 ? outer : inner;
-        pts.push(`${o + radius * Math.cos(angle)},${o + radius * Math.sin(angle)}`);
-      }
-      return `<polygon points="${pts.join(' ')}" fill="${color}" fill-opacity="0.92" stroke="white" stroke-width="2" stroke-linejoin="round"/>`;
-    }
-  }
-}
-
-function markerSvg(marker: Marker, size: number): Buffer {
-  return Buffer.from(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">${shapeSvg(marker.shape, size, marker.color)}</svg>`,
-  );
-}
 
 /**
  * Deterministic PRNG so each puzzle slug gives reproducible marker layout.
@@ -163,33 +128,66 @@ function pickPositions(seed: string, n: number): { x: number; y: number }[] {
   return positions;
 }
 
-async function applyMarkers(
+async function applyDistortions(
   baseImg: Buffer,
   positions: { x: number; y: number }[],
 ): Promise<{ image: Buffer; hotspots: Hotspot[] }> {
   const meta = await sharp(baseImg).metadata();
   const w = meta.width!;
   const h = meta.height!;
-  // Marker size scales with image — 4% of the longer edge feels right.
-  const markerSize = Math.round(Math.max(w, h) * 0.04);
+  // Patch size: ~9% of the longer edge. Big enough that asymmetric content
+  // in the scene (faces, signs, props) gets a visible transformation;
+  // small enough that the diff feels local, not regional.
+  const patchSize = Math.round(Math.max(w, h) * 0.09);
 
-  const composites = positions.map((pos, i) => {
-    const marker = MARKERS[i % MARKERS.length];
-    const svg = markerSvg(marker, markerSize);
-    const left = Math.max(0, Math.round(pos.x * w - markerSize / 2));
-    const top = Math.max(0, Math.round(pos.y * h - markerSize / 2));
-    return { input: svg, left, top };
-  });
+  const composites = await Promise.all(
+    positions.map(async (pos, i) => {
+      const { kind } = DISTORTIONS[i % DISTORTIONS.length];
 
-  const image = await sharp(baseImg).composite(composites).jpeg({ quality: 88, mozjpeg: true }).toBuffer();
+      // Clamp the extract window so we never read outside the image bounds.
+      const left = Math.max(0, Math.min(w - patchSize, Math.round(pos.x * w - patchSize / 2)));
+      const top = Math.max(0, Math.min(h - patchSize, Math.round(pos.y * h - patchSize / 2)));
+
+      let patch = sharp(baseImg).extract({ left, top, width: patchSize, height: patchSize });
+      switch (kind) {
+        case 'flop':
+          patch = patch.flop();
+          break;
+        case 'flip':
+          patch = patch.flip();
+          break;
+        case 'rotate180':
+          patch = patch.rotate(180);
+          break;
+        case 'hueShift':
+          // 60° hue rotation — substantial enough to be visible in colorful
+          // scenes, but doesn't change shape/structure so it stays photoreal.
+          patch = patch.modulate({ hue: 60 });
+          break;
+        case 'desaturate':
+          patch = patch.modulate({ saturation: 0.35 });
+          break;
+      }
+
+      return { input: await patch.toBuffer(), left, top };
+    }),
+  );
+
+  // Composite all patches in one pass — order doesn't matter since each is
+  // at a different position and we pre-extracted from the original buffer.
+  const image = await sharp(baseImg)
+    .composite(composites)
+    .jpeg({ quality: 88, mozjpeg: true })
+    .toBuffer();
 
   const hotspots: Hotspot[] = positions.map((pos, i) => ({
     id: `h${i + 1}`,
     x: pos.x,
     y: pos.y,
-    // Slightly larger than the marker itself so taps near the marker still register.
-    r: 0.07,
-    hint: MARKERS[i % MARKERS.length].label,
+    // Hit radius covers the full patch (~9% wide → 0.045 half-width)
+    // plus generous tap forgiveness.
+    r: 0.08,
+    hint: DISTORTIONS[i % DISTORTIONS.length].label,
   }));
 
   return { image, hotspots };
@@ -205,15 +203,15 @@ async function main() {
   // Image A is the clean base scene.
   await writeFile(join(OUT_DIR, 'imageA.jpg'), base);
 
-  console.log(`[${SLUG}] 2. Picking ${DIFF_COUNT} marker positions…`);
+  console.log(`[${SLUG}] 2. Picking ${DIFF_COUNT} distortion positions…`);
   const positions = pickPositions(SLUG, DIFF_COUNT);
   positions.forEach((p, i) => {
-    const m = MARKERS[i % MARKERS.length];
-    console.log(`   ${m.shape} (${m.color}) at (${p.x.toFixed(2)}, ${p.y.toFixed(2)})`);
+    const d = DISTORTIONS[i % DISTORTIONS.length];
+    console.log(`   ${d.label} at (${p.x.toFixed(2)}, ${p.y.toFixed(2)})`);
   });
 
-  console.log(`[${SLUG}] 3. Compositing markers onto image B…`);
-  const { image: imageB, hotspots } = await applyMarkers(base, positions);
+  console.log(`[${SLUG}] 3. Applying distortions to image B patches…`);
+  const { image: imageB, hotspots } = await applyDistortions(base, positions);
   await writeFile(join(OUT_DIR, 'imageB.jpg'), imageB);
 
   await writeFile(
@@ -224,7 +222,7 @@ async function main() {
         slug: SLUG,
         basePrompt: BASE,
         seed: SEED,
-        markerCount: DIFF_COUNT,
+        diffCount: DIFF_COUNT,
         hotspots,
         generatedAt: new Date().toISOString(),
       },
@@ -233,7 +231,7 @@ async function main() {
     ),
   );
 
-  console.log(`[${SLUG}] Done. ${hotspots.length} markers placed. ${hotspots.length} hotspots written.`);
+  console.log(`[${SLUG}] Done. ${hotspots.length} distortions applied. ${hotspots.length} hotspots written.`);
 }
 
 main().catch((err) => {
