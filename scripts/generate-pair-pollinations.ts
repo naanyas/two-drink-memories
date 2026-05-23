@@ -72,17 +72,19 @@ async function upscaleAndSharpen(input: Buffer): Promise<Buffer> {
     .toBuffer();
 }
 
-// Subtle, photoreal distortions. Each one extracts a small patch from the
-// scene at a hotspot location, applies a natural-looking transformation,
-// and composites it back. The change is *of* the scene, not on top of it —
-// so it blends in instead of screaming "I'm a sticker".
-type Distortion = 'flop' | 'flip' | 'rotate180' | 'hueShift' | 'desaturate';
+// Photoreal patch distortions. Each one extracts a small patch from the
+// scene at a hotspot location, applies a transformation strong enough to
+// be findable on a varied background, and composites it back. The change
+// is *of* the scene, not on top of it — but the transformation is now
+// large enough to read clearly (the previous values were too subtle and
+// got lost on uniform textures).
+type Distortion = 'flop' | 'rotate180' | 'hueInvert' | 'grayscale' | 'blur';
 const DISTORTIONS: { kind: Distortion; label: string }[] = [
   { kind: 'flop', label: 'mirrored patch' },
   { kind: 'rotate180', label: 'rotated patch' },
-  { kind: 'hueShift', label: 'hue-shifted patch' },
-  { kind: 'desaturate', label: 'desaturated patch' },
-  { kind: 'flip', label: 'vertically flipped patch' },
+  { kind: 'hueInvert', label: 'inverted colors' },
+  { kind: 'grayscale', label: 'desaturated patch' },
+  { kind: 'blur', label: 'blurred patch' },
 ];
 
 /**
@@ -135,10 +137,9 @@ async function applyDistortions(
   const meta = await sharp(baseImg).metadata();
   const w = meta.width!;
   const h = meta.height!;
-  // Patch size: ~9% of the longer edge. Big enough that asymmetric content
-  // in the scene (faces, signs, props) gets a visible transformation;
-  // small enough that the diff feels local, not regional.
-  const patchSize = Math.round(Math.max(w, h) * 0.09);
+  // Patch size: ~13% of the longer edge. Big enough that the distortion
+  // is visible even on uniform textures (where a 9% patch would blend in).
+  const patchSize = Math.round(Math.max(w, h) * 0.13);
 
   const composites = await Promise.all(
     positions.map(async (pos, i) => {
@@ -153,19 +154,24 @@ async function applyDistortions(
         case 'flop':
           patch = patch.flop();
           break;
-        case 'flip':
-          patch = patch.flip();
-          break;
         case 'rotate180':
           patch = patch.rotate(180);
           break;
-        case 'hueShift':
-          // 60° hue rotation — substantial enough to be visible in colorful
-          // scenes, but doesn't change shape/structure so it stays photoreal.
-          patch = patch.modulate({ hue: 60 });
+        case 'hueInvert':
+          // 180° hue rotation = the opposite of every color in the patch.
+          // Photoreal but immediately wrong-looking to a careful scanner.
+          patch = patch.modulate({ hue: 180 });
           break;
-        case 'desaturate':
-          patch = patch.modulate({ saturation: 0.35 });
+        case 'grayscale':
+          // Saturation 0.1 = nearly grayscale. Color drains from this
+          // patch while the rest of the scene stays vivid.
+          patch = patch.modulate({ saturation: 0.1 });
+          break;
+        case 'blur':
+          // Substantial gaussian blur — turns one part of an otherwise
+          // sharp image into a soft, out-of-focus spot. Easy to spot
+          // on a careful scan, not arcade-obvious.
+          patch = patch.blur(6);
           break;
       }
 
@@ -184,9 +190,9 @@ async function applyDistortions(
     id: `h${i + 1}`,
     x: pos.x,
     y: pos.y,
-    // Hit radius covers the full patch (~9% wide → 0.045 half-width)
-    // plus generous tap forgiveness.
-    r: 0.08,
+    // Hit radius covers the full patch (13% wide → 0.065 half-width) with
+    // tap forgiveness around it.
+    r: 0.10,
     hint: DISTORTIONS[i % DISTORTIONS.length].label,
   }));
 
